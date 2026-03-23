@@ -1,0 +1,64 @@
+<!-- Navbar simple -->
+<nav class="navbar" *ngIf="authService.isAuthenticated()">
+  <div class="nav-container">
+    <div class="nav-brand">
+       Autolote Manager
+    </div>
+    <div class="nav-user">
+      <span>👤 {{ userName }}</span>
+      <button class="btn-logout" (click)="logout()">Cerrar Sesión</button>
+    </div>
+  </div>
+</nav>
+
+<div class="vehiculos-container">
+  <div class="main-content">
+    <h2> Listado de Vehículos</h2>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="loading">
+      Cargando vehículos...
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Tabla de vehículos -->
+    <div *ngIf="!loading && !errorMessage" class="table-container">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>Año</th>
+            <th>Precio (USD)</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let vehiculo of vehiculos">
+            <td>{{ vehiculo.id }}</td>
+            <td>{{ vehiculo.marca }}</td>
+            <td>{{ vehiculo.modelo }}</td>
+            <td>{{ vehiculo['año'] }}</td>
+            <td>${{ vehiculo.precio_usd | number:'1.2-2' }}</td>
+            <td>
+              <span class="badge" 
+                    [class.badge-disponible]="vehiculo.estado === 'disponible'"
+                    [class.badge-vendido]="vehiculo.estado === 'vendido'"
+                    [class.badge-reservado]="vehiculo.estado === 'reservado'">
+                {{ vehiculo.estado }}
+              </span>
+            </td>
+          </tr>
+          <tr *ngIf="vehiculos.length === 0">
+            <td colspan="6" class="text-center">No hay vehículos registrados</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
