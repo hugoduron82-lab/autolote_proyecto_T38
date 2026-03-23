@@ -1,0 +1,1349 @@
+{
+  "info": {
+    "_postman_id": "955d3548-b381-44cd-ba17-130af5e2ff4c",
+    "name": "Autolote API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53407235",
+    "_collection_link": "https://go.postman.co/collection/53407235-955d3548-b381-44cd-ba17-130af5e2ff4c?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/health",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "health"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Registrar Usuario",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Verificar status 201\r",
+              "pm.test(\"Status code es 201 Created\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "// Verificar estructura de respuesta\r",
+              "pm.test(\"Respuesta tiene formato correcto\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData).to.have.property(\"status\");\r",
+              "    pm.expect(jsonData).to.have.property(\"message\");\r",
+              "    pm.expect(jsonData).to.have.property(\"data\");\r",
+              "});\r",
+              "\r",
+              "// Verificar que el usuario se creó con los datos correctos\r",
+              "pm.test(\"Datos del usuario son correctos\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.data.nombre).to.eql(\"Carlos\");\r",
+              "    pm.expect(jsonData.data.apellido).to.eql(\"Mendoza\");\r",
+              "    pm.expect(jsonData.data.email).to.eql(\"carlos@test.com\");\r",
+              "});\r",
+              "\r",
+              "// Guardar el ID del usuario para pruebas posteriores\r",
+              "const jsonData = pm.response.json();\r",
+              "if (jsonData.data && jsonData.data.id) {\r",
+              "    pm.environment.set(\"usuario_id\", jsonData.data.id);\r",
+              "    console.log(\"✅ Usuario creado con ID:\", jsonData.data.id);\r",
+              "}"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"nombre\": \"Carlos\",\r\n    \"apellido\": \"Mendoza\",\r\n    \"email\": \"carlos@test.com\",\r\n    \"password\": \"123456\",\r\n    \"rol\": \"vendedor\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/auth/register",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "LOGIN (GUARDAR TOKEN)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Verificar status\r",
+              "pm.test(\"Status code es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "// Verificar estructura de respuesta\r",
+              "pm.test(\"Respuesta tiene token\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.data).to.have.property(\"token\");\r",
+              "});\r",
+              "\r",
+              "// GUARDAR EL TOKEN Y DATOS DEL USUARIO\r",
+              "const jsonData = pm.response.json();\r",
+              "\r",
+              "if (jsonData.data && jsonData.data.token) {\r",
+              "    // Guardar token\r",
+              "    const token = jsonData.data.token;\r",
+              "    pm.environment.set(\"auth_token\", token);\r",
+              "    console.log(\"✅ TOKEN GUARDADO EXITOSAMENTE\");\r",
+              "    console.log(\"Token (primeros 50 caracteres):\", token.substring(0, 50) + \"...\");\r",
+              "    \r",
+              "    // Guardar datos del usuario\r",
+              "    if (jsonData.data.user) {\r",
+              "        pm.environment.set(\"user_id\", jsonData.data.user.id);\r",
+              "        pm.environment.set(\"user_rol\", jsonData.data.user.rol);\r",
+              "        console.log(\"✅ Usuario ID:\", jsonData.data.user.id);\r",
+              "        console.log(\"✅ Rol:\", jsonData.data.user.rol);\r",
+              "    }\r",
+              "    \r",
+              "    // Mostrar mensaje en la interfaz\r",
+              "    pm.test(\"Token guardado correctamente\", function () {\r",
+              "        pm.expect(pm.environment.get(\"auth_token\")).to.not.be.empty;\r",
+              "    });\r",
+              "    \r",
+              "} else {\r",
+              "    console.log(\"❌ ERROR: No se recibió token\");\r",
+              "    console.log(\"Respuesta completa:\", jsonData);\r",
+              "    pm.test(\"No se recibió token\", function () {\r",
+              "        throw new Error(\"La respuesta no contiene token\");\r",
+              "    });\r",
+              "}"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\": \"carlos@test.com\",\r\n    \"password\": \"123456\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/auth/login",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "LISTAR VEHÍCULOS",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Verificar status\r",
+              "pm.test(\"Status code es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "// Verificar que es un array\r",
+              "pm.test(\"Respuesta es un array de vehículos\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.data).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "// Contar vehículos\r",
+              "const jsonData = pm.response.json();\r",
+              "console.log(\"📊 Total de vehículos:\", jsonData.data.length);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/vehiculos",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "vehiculos"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "CREAR VEHÍCULO",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Verificar status 201\r",
+              "pm.test(\"Status code es 201 Created\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "// Guardar ID del vehículo creado\r",
+              "const jsonData = pm.response.json();\r",
+              "if (jsonData.data && jsonData.data.id) {\r",
+              "    pm.environment.set(\"vehiculo_id\", jsonData.data.id);\r",
+              "    console.log(\"✅ Vehículo creado con ID:\", jsonData.data.id);\r",
+              "    console.log(\"🚗 Marca:\", jsonData.data.marca);\r",
+              "    console.log(\"💰 Precio: $\", jsonData.data.precio_usd);\r",
+              "}\r",
+              "\r",
+              "// Verificar que la respuesta tiene los datos correctos\r",
+              "pm.test(\"Vehículo creado con datos correctos\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.data.marca).to.eql(\"Mitsubishi\");\r",
+              "    pm.expect(jsonData.data.modelo).to.eql(\"L200\");\r",
+              "    pm.expect(jsonData.data.precio_usd).to.eql(33000);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"marca\": \"Mitsubishi\",\r\n    \"modelo\": \"L200\",\r\n    \"año\": 2023,\r\n    \"precio_usd\": 33000,\r\n    \"estado\": \"disponible\",\r\n    \"descripcion\": \"Pickup 4x4, color negro, doble cabina\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/vehiculos",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "vehiculos"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "FILTRAR VEHÍCULOS POR MARCA",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const jsonData = pm.response.json();\r",
+              "console.log(\"🚗 Vehículos Toyota encontrados:\", jsonData.data.length);\r",
+              "\r",
+              "// Verificar que todos son Toyota\r",
+              "pm.test(\"Todos los vehículos son Toyota\", function () {\r",
+              "    jsonData.data.forEach(vehiculo => {\r",
+              "        pm.expect(vehiculo.marca).to.eql(\"Toyota\");\r",
+              "    });\r",
+              "});\r",
+              "\r",
+              "// Mostrar los vehículos encontrados\r",
+              "if (jsonData.data.length > 0) {\r",
+              "    console.log(\"Lista de vehículos Toyota:\");\r",
+              "    jsonData.data.forEach(v => {\r",
+              "        console.log(`   - ${v.marca} ${v.modelo} ($${v.precio_usd})`);\r",
+              "    });\r",
+              "}"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/vehiculos?marca=Toyota",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "vehiculos"
+          ],
+          "query": [
+            {
+              "key": "marca",
+              "value": "Toyota"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "FILTRAR VEHÍCULOS POR PRECIO MÁXIMO",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const jsonData = pm.response.json();\r",
+              "console.log(\"💰 Vehículos con precio < $25,000:\", jsonData.data.length);\r",
+              "\r",
+              "// Verificar que todos tienen precio menor o igual a 25000\r",
+              "pm.test(\"Todos los vehículos cuestan menos de $25,000\", function () {\r",
+              "    jsonData.data.forEach(vehiculo => {\r",
+              "        pm.expect(vehiculo.precio_usd).to.be.at.most(25000);\r",
+              "    });\r",
+              "});\r",
+              "\r",
+              "// Mostrar los vehículos económicos\r",
+              "if (jsonData.data.length > 0) {\r",
+              "    console.log(\"Vehículos económicos:\");\r",
+              "    jsonData.data.forEach(v => {\r",
+              "        console.log(`   - ${v.marca} ${v.modelo}: $${v.precio_usd}`);\r",
+              "    });\r",
+              "}"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/vehiculos?precio_max=25000",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "vehiculos"
+          ],
+          "query": [
+            {
+              "key": "precio_max",
+              "value": "25000"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "OBTENER VEHÍCULO POR ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const jsonData = pm.response.json();\r",
+              "console.log(\"🚗 Vehículo encontrado:\");\r",
+              "console.log(`   ID: ${jsonData.data.id}`);\r",
+              "console.log(`   Marca: ${jsonData.data.marca}`);\r",
+              "console.log(`   Modelo: ${jsonData.data.modelo}`);\r",
+              "console.log(`   Año: ${jsonData.data.año}`);\r",
+              "console.log(`   Precio: $${jsonData.data.precio_usd}`);\r",
+              "console.log(`   Estado: ${jsonData.data.estado}`);\r",
+              "\r",
+              "// Verificar que el vehículo tiene todos los campos\r",
+              "pm.test(\"Vehículo tiene todos los campos requeridos\", function () {\r",
+              "    pm.expect(jsonData.data).to.have.property(\"id\");\r",
+              "    pm.expect(jsonData.data).to.have.property(\"marca\");\r",
+              "    pm.expect(jsonData.data).to.have.property(\"modelo\");\r",
+              "    pm.expect(jsonData.data).to.have.property(\"año\");\r",
+              "    pm.expect(jsonData.data).to.have.property(\"precio_usd\");\r",
+              "    pm.expect(jsonData.data).to.have.property(\"estado\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/vehiculos/6",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "vehiculos",
+            "6"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "ACTUALIZAR VEHÍCULO",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"marca\": \"Mitsubishi\",\r\n    \"modelo\": \"L200\",\r\n    \"año\": 2025,\r\n    \"precio_usd\": 32000,\r\n    \"estado\": \"reservado\",\r\n    \"descripcion\": \"Pickup 4x4, color negro - OFERTA ESPECIAL - ¡ÚLTIMA UNIDAD!\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/vehiculos/{{vehiculo_id}}",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "vehiculos",
+            "{{vehiculo_id}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "ELIMINAR VEHÍCULO",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "console.log(\"🗑️ Vehículo eliminado correctamente\");\r",
+              "\r",
+              "// Opcional: verificar que ya no existe\r",
+              "// Después de eliminar, puedes intentar obtenerlo con GET y debería dar 404"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/vehiculos/{{vehiculo_id}}",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "vehiculos",
+            "{{vehiculo_id}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TASAS DE CAMBIO (NO REQUIEREN TOKEN)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const jsonData = pm.response.json();\r",
+              "console.log(\"💱 Tasas de cambio del día:\");\r",
+              "console.log(`   USD 1 = L ${jsonData.lempiras_por_dolar}`);\r",
+              "console.log(`   USD 1 = € ${jsonData.rates.EUR}`);\r",
+              "console.log(`   USD 1 = Q ${jsonData.rates.GTQ}`);\r",
+              "\r",
+              "pm.test(\"Tasa de Lempiras está presente\", function () {\r",
+              "    pm.expect(jsonData.rates).to.have.property(\"HNL\");\r",
+              "    pm.expect(jsonData.lempiras_por_dolar).to.be.a(\"number\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/exchange/rates",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "exchange",
+            "rates"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "CONVERTIR USD A LEMPIRAS",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const jsonData = pm.response.json();\r",
+              "console.log(\"💰 Conversión de moneda:\");\r",
+              "console.log(`   $1,000 USD = L ${jsonData.monto_hnl.toFixed(2)}`);\r",
+              "console.log(`   Tasa de cambio: L ${jsonData.tasa_cambio} por USD`);\r",
+              "\r",
+              "pm.test(\"Conversión matemática correcta\", function () {\r",
+              "    const esperado = jsonData.monto_usd * jsonData.tasa_cambio;\r",
+              "    pm.expect(jsonData.monto_hnl).to.eql(esperado);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/exchange/to-hnl/1000",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "exchange",
+            "to-hnl",
+            "1000"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "PRECIO DE VEHÍCULO EN LEMPIRAS",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const jsonData = pm.response.json();\r",
+              "console.log(\"🚗 Precio del vehículo en Lempiras:\");\r",
+              "console.log(`   ${jsonData.vehiculo.marca} ${jsonData.vehiculo.modelo} (${jsonData.vehiculo.año})`);\r",
+              "console.log(`   Precio en USD: ${jsonData.precio_original_usd}`);\r",
+              "console.log(`   Precio en Lempiras: ${jsonData.precio_en_lempiras}`);\r",
+              "console.log(`   Tasa del día: ${jsonData.tasa_del_dia}`);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/exchange/precio-vehiculo/1",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "exchange",
+            "precio-vehiculo",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "CLIENTES (REQUIEREN TOKEN)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Verificar status\r",
+              "pm.test(\"Status code es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const jsonData = pm.response.json();\r",
+              "console.log(\"👥 Total de clientes:\", jsonData.data.length);\r",
+              "\r",
+              "// Mostrar lista de clientes\r",
+              "if (jsonData.data.length > 0) {\r",
+              "    console.log(\"📋 Lista de clientes:\");\r",
+              "    jsonData.data.forEach(cliente => {\r",
+              "        console.log(`   ${cliente.id}. ${cliente.nombre} ${cliente.apellido} - ${cliente.email}`);\r",
+              "    });\r",
+              "}\r",
+              "\r",
+              "// Verificar que es un array\r",
+              "pm.test(\"Respuesta es un array de clientes\", function () {\r",
+              "    pm.expect(jsonData.data).to.be.an(\"array\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/clientes",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "clientes"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "CREAR CLIENTE",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Verificar status 201\r",
+              "pm.test(\"Status code es 201 Created\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "// Guardar ID del cliente creado\r",
+              "const jsonData = pm.response.json();\r",
+              "if (jsonData.data && jsonData.data.id) {\r",
+              "    pm.environment.set(\"cliente_id\", jsonData.data.id);\r",
+              "    console.log(\"✅ Cliente creado con ID:\", jsonData.data.id);\r",
+              "    console.log(\"👤 Nombre:\", jsonData.data.nombre, jsonData.data.apellido);\r",
+              "    console.log(\"📧 Email:\", jsonData.data.email);\r",
+              "}\r",
+              "\r",
+              "// Verificar datos\r",
+              "pm.test(\"Cliente creado con datos correctos\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.data.nombre).to.eql(\"Pedro\");\r",
+              "    pm.expect(jsonData.data.apellido).to.eql(\"Ramírez\");\r",
+              "    pm.expect(jsonData.data.email).to.eql(\"pedro.ramirez@email.com\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"nombre\": \"Pedro\",\r\n    \"apellido\": \"Ramírez\",\r\n    \"email\": \"pedro.ramirez@email.com\",\r\n    \"telefono\": \"9988-7766\",\r\n    \"direccion\": \"Colonia Kennedy, Tegucigalpa\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/clientes",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "clientes"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "REGISTRAR CONSULTA DE CLIENTE",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Verificar status 201\r",
+              "pm.test(\"Status code es 201 Created\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "const jsonData = pm.response.json();\r",
+              "console.log(\"💬 Consulta registrada exitosamente\");\r",
+              "console.log(\"   ID de consulta:\", jsonData.data.id);\r",
+              "console.log(\"   Fecha:\", jsonData.data.fecha);\r",
+              "\r",
+              "pm.test(\"Respuesta tiene datos de consulta\", function () {\r",
+              "    pm.expect(jsonData.data).to.have.property(\"id\");\r",
+              "    pm.expect(jsonData.data).to.have.property(\"fecha\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"vehiculoId\": 2,\r\n    \"mensaje\": \"¿El vehículo tiene garantía? ¿Cuántos kilómetros tiene? ¿Aceptan financiamiento?\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/clientes/{{cliente_id}}/consultas",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "clientes",
+            "{{cliente_id}}",
+            "consultas"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "VER HISTORIAL DE CONSULTAS",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Verificar status\r",
+              "pm.test(\"Status code es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const jsonData = pm.response.json();\r",
+              "console.log(\"📋 Historial de consultas del cliente:\");\r",
+              "console.log(\"   Total de consultas:\", jsonData.data.length);\r",
+              "\r",
+              "if (jsonData.data.length > 0) {\r",
+              "    console.log(\"   Consultas registradas:\");\r",
+              "    jsonData.data.forEach((consulta, index) => {\r",
+              "        console.log(`   ${index + 1}. Vehículo ID: ${consulta.vehiculo_id || 'N/A'}`);\r",
+              "        console.log(`      Mensaje: ${consulta.mensaje.substring(0, 50)}...`);\r",
+              "        console.log(`      Fecha: ${consulta.fecha_consulta}`);\r",
+              "    });\r",
+              "}\r",
+              "\r",
+              "pm.test(\"Historial es un array\", function () {\r",
+              "    pm.expect(jsonData.data).to.be.an(\"array\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/clientes/{{cliente_id}}/consultas",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "clientes",
+            "{{cliente_id}}",
+            "consultas"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "SOLICITAR PRUEBA DE MANEJO",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Verificar status 201\r",
+              "pm.test(\"Status code es 201 Created\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "const jsonData = pm.response.json();\r",
+              "console.log(\"🏁 Prueba de manejo solicitada exitosamente\");\r",
+              "console.log(\"   ID de prueba:\", jsonData.data.id);\r",
+              "console.log(\"   Estado:\", jsonData.data.estado);\r",
+              "console.log(\"   Fecha solicitud:\", jsonData.data.fecha_solicitud);\r",
+              "\r",
+              "pm.test(\"Prueba creada con estado pendiente\", function () {\r",
+              "    pm.expect(jsonData.data.estado).to.eql(\"pendiente\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"vehiculoId\": 1,\r\n    \"fecha_programada\": \"2024-03-30 10:00:00\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/clientes/{{cliente_id}}/pruebas",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "clientes",
+            "{{cliente_id}}",
+            "pruebas"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "VENTAS (REQUIEREN TOKEN)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Verificar status\r",
+              "pm.test(\"Status code es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const jsonData = pm.response.json();\r",
+              "console.log(\"💰 Total de ventas registradas:\", jsonData.data.length);\r",
+              "\r",
+              "if (jsonData.data.length > 0) {\r",
+              "    console.log(\"📊 Resumen de ventas:\");\r",
+              "    let totalUSD = 0;\r",
+              "    jsonData.data.forEach(venta => {\r",
+              "        totalUSD += venta.precio_total_usd;\r",
+              "        console.log(`   Venta #${venta.id}: $${venta.precio_total_usd} - ${venta.cliente_nombre} ${venta.cliente_apellido}`);\r",
+              "    });\r",
+              "    console.log(`   Total ventas: $${totalUSD}`);\r",
+              "}\r",
+              "\r",
+              "pm.test(\"Respuesta es un array de ventas\", function () {\r",
+              "    pm.expect(jsonData.data).to.be.an(\"array\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/ventas",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "ventas"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "REGISTRAR VENTA",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Verificar status 201\r",
+              "pm.test(\"Status code es 201 Created\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "const jsonData = pm.response.json();\r",
+              "console.log(\"✅ Venta registrada exitosamente\");\r",
+              "console.log(\"   ID de venta:\", jsonData.data.id);\r",
+              "console.log(\"   Vehículo ID:\", jsonData.data.vehiculo_id);\r",
+              "console.log(\"   Cliente ID:\", jsonData.data.cliente_id);\r",
+              "console.log(\"   Vendedor ID:\", jsonData.data.vendedor_id);\r",
+              "console.log(\"   Precio USD: $\", jsonData.data.precio_total_usd);\r",
+              "console.log(\"   Precio HNL: L\", jsonData.data.precio_total_hnl);\r",
+              "console.log(\"   Impuestos USD: $\", jsonData.data.impuestos_usd);\r",
+              "console.log(\"   Impuestos HNL: L\", jsonData.data.impuestos_hnl);\r",
+              "console.log(\"   Total con impuestos USD: $\", jsonData.data.total_con_impuestos_usd);\r",
+              "\r",
+              "// Verificar cálculo de impuestos (15%)\r",
+              "pm.test(\"Impuestos calculados correctamente (15%)\", function () {\r",
+              "    const impuestosEsperados = jsonData.data.precio_total_usd * 0.15;\r",
+              "    pm.expect(jsonData.data.impuestos_usd).to.eql(impuestosEsperados);\r",
+              "});\r",
+              "\r",
+              "// Guardar ID de venta\r",
+              "pm.environment.set(\"venta_id\", jsonData.data.id);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"vehiculo_id\": 1,\r\n    \"cliente_id\": 1,\r\n    \"vendedor_id\": 2,\r\n    \"precio_total_usd\": 35000\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/ventas",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "ventas"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "VENTAS POR VENDEDOR",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Verificar status\r",
+              "pm.test(\"Status code es 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const jsonData = pm.response.json();\r",
+              "console.log(\"📊 Reporte de ventas por vendedor:\");\r",
+              "console.log(\"   Vendedor ID:\", 2);\r",
+              "console.log(\"   Cantidad de ventas:\", jsonData.data.resumen.cantidad_ventas);\r",
+              "console.log(\"   Total ventas USD: $\", jsonData.data.resumen.total_ventas_usd);\r",
+              "console.log(\"   Total ventas HNL: L\", jsonData.data.resumen.total_ventas_hnl);\r",
+              "console.log(\"   Total impuestos USD: $\", jsonData.data.resumen.total_impuestos_usd);\r",
+              "console.log(\"   Total impuestos HNL: L\", jsonData.data.resumen.total_impuestos_hnl);\r",
+              "console.log(\"   Total con impuestos USD: $\", jsonData.data.resumen.total_con_impuestos_usd);\r",
+              "console.log(\"   Total con impuestos HNL: L\", jsonData.data.resumen.total_con_impuestos_hnl);\r",
+              "\r",
+              "if (jsonData.data.ventas.length > 0) {\r",
+              "    console.log(\"\\n📋 Detalle de ventas:\");\r",
+              "    jsonData.data.ventas.forEach(venta => {\r",
+              "        console.log(`   Venta #${venta.id}: ${venta.marca} ${venta.modelo} - $${venta.precio_total_usd} - Cliente: ${venta.cliente_nombre}`);\r",
+              "    });\r",
+              "}\r",
+              "\r",
+              "// Verificar estructura de respuesta\r",
+              "pm.test(\"Respuesta tiene resumen de ventas\", function () {\r",
+              "    pm.expect(jsonData.data).to.have.property(\"resumen\");\r",
+              "    pm.expect(jsonData.data.resumen).to.have.property(\"cantidad_ventas\");\r",
+              "    pm.expect(jsonData.data.resumen).to.have.property(\"total_ventas_usd\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{auth_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/ventas/vendedor/2",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "ventas",
+            "vendedor",
+            "2"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
