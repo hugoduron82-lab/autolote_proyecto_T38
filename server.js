@@ -4,10 +4,10 @@ require('dotenv').config();
 
 // Importar rutas
 const authRoutes = require('./routes/authRoutes');
-//const vehiculoRoutes = require('./routes/vehiculoRoutes');
-//const exchangeRoutes = require('./routes/exchangeRoutes');
-//const clienteRoutes = require('./routes/clienteRoutes');
-//const ventaRoutes = require('./routes/ventaRoutes');
+const vehiculoRoutes = require('./routes/vehiculoRoutes');
+const exchangeRoutes = require('./routes/exchangeRoutes');
+const clienteRoutes = require('./routes/clienteRoutes');
+const ventaRoutes = require('./routes/ventaRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,16 +25,16 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 
 // Vehículos
-//app.use('/api/vehiculos', vehiculoRoutes);
+app.use('/api/vehiculos', vehiculoRoutes);
 
 // Tasas de cambio
-//app.use('/api/exchange', exchangeRoutes);
+app.use('/api/exchange', exchangeRoutes);
 
 // Clientes
-//app.use('/api/clientes', clienteRoutes);
+app.use('/api/clientes', clienteRoutes);
 
 // Ventas
-//app.use('/api/ventas', ventaRoutes);
+app.use('/api/ventas', ventaRoutes);
 
 // =============================================
 // RUTA DE PRUEBA / HEALTH CHECK
